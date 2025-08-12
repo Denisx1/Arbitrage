@@ -32,7 +32,6 @@ git clone https://github.com/yourusername/arbitrage-bot.git
 cd arbitrage-bot
 
 2. Install dependencies:
-
 npm install
 
 3. Create a .env file based on .env.example and fill in your API keys and other parameters:
