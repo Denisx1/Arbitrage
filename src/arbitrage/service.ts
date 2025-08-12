@@ -1,5 +1,5 @@
 import { Config, PriceData } from "../config/types";
-interface ArbitrageOpportunity {
+export interface ArbitrageOpportunity {
   bestBuy: {
     exchange: string;
     price: number;

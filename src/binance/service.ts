@@ -1,25 +1,42 @@
 import WebSocket from "ws";
 import { updatePriceStore } from "../utils/priceStore";
-import { config } from "../config/config";
+import { ExchangeConfig } from "../config/types";
 import { convertTimestampToUTC } from "../utils/timeUtil";
-import { getBestPrices, getWeightedAvgPrice } from "../utils/util";
-export function connectBinance(symbol: string) {
-  const wsUrl = config.binance.wsUrl.replace("%SYMBOL%", symbol.toLowerCase());
-  const ws = new WebSocket(wsUrl);
-  ws.on("open", () => console.log("✅ Binance connected"));
+import { getBestPrices } from "../utils/util";
+import { ExchngeClient } from "../types";
 
-  ws.on("message", (msg) => {
-    const data = JSON.parse(msg.toString());
+export class BinanceWsClient implements ExchngeClient {
+  private wsPublic: WebSocket | null = null;
+  private wsPrivate: WebSocket | null = null;
+  private wsPublicUrl: string;
+  private wsPrivateUrl: string;
+  private apiKey: string;
+  private apiSecret: string;
+  private isAuthenticated: boolean = false;
+  private symbol: string;
+  constructor(binanceConfig: ExchangeConfig, symbol: string) {
+    this.symbol = symbol;
+    this.apiKey = binanceConfig.apiKey;
+    this.apiSecret = binanceConfig.apiSecret;
+    this.wsPublicUrl = binanceConfig.wsUrl;
+    this.wsPrivateUrl = binanceConfig.wsTradeUrl;
+  }
+  public connectPublic() {
+    const wsUrl = this.wsPublicUrl.replace(
+      "%SYMBOL%",
+      this.symbol.toLowerCase()
+    );
+    this.wsPublic = new WebSocket(wsUrl);
+    this.wsPublic!.on("open", () => console.log("✅ Binance connected"));
 
-    const { a, b } = data.data;
-    const { bestAskPrice, bestBidPrice } = getBestPrices(a, b);
-    updatePriceStore("binance", bestAskPrice, bestBidPrice);
-  });
+    this.wsPublic!.on("message", (msg) => {
+      const data = JSON.parse(msg.toString());
 
-  // data.data.b.forEach((i:any) => console.log(i));
-  // const price: number = parseFloat(data.data.p);
-  // const utcTimestamp = convertTimestampToUTC(data.data.E);
-  // updatePriceStore("binance", price, utcTimestamp);
+      const { a, b } = data.data;
+      const { bestAskPrice, bestBidPrice } = getBestPrices(a, b);
+      updatePriceStore("binance", bestAskPrice, bestBidPrice);
+    });
 
-  ws.on("error", (err) => console.error("Binance error:", err));
+    this.wsPublic.on("error", (err) => console.error("Binance error:", err));
+  }
 }

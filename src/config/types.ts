@@ -1,5 +1,8 @@
 export interface ExchangeConfig {
   wsUrl: string;
+  wsTradeUrl: string;
+  apiKey: string;
+  apiSecret: string;
 }
 export interface PriceData {
   bestBuy: number | null;

@@ -1,0 +1,40 @@
+import { ExchangeConfig } from "./config/types";
+import { Exchanges } from "./pairsEnum";
+export interface ExchngeClient {
+  connectPublic: () => void;
+  connectPrivate?: () => void;
+  placeOrderBybit?: (price: number, qty: number, side: string) => Promise<void>;
+}
+
+export const ExchangesConfig: Record<Exchanges, ExchangeConfig> = {
+  [Exchanges.BINGX]: {
+    wsUrl: process.env.BINGX_WEB_SOCKET!,
+    wsTradeUrl: process.env.BINGX_TRADE_WEB_SOCKET!,
+    apiKey: process.env.BINGX_API_KEY!,
+    apiSecret: process.env.BINGX_API_SECRET!,
+  },
+  [Exchanges.BINANCE]: {
+    wsUrl: process.env.BINANCE_WEB_SOCKET!,
+    wsTradeUrl: process.env.BINANCE_TRADE_WEB_SOCKET!,
+    apiKey: process.env.BINANCE_API_KEY!,
+    apiSecret: process.env.BINANCE_API_SECRET!,
+  },
+  [Exchanges.BYBIT]: {
+    wsUrl: process.env.BYBIT_WEB_SOCKET!,
+    wsTradeUrl: process.env.BYBIT_TRADE_WEB_SOCKET!,
+    apiKey: process.env.BYBIT_API_KEY!,
+    apiSecret: process.env.BYBIT_API_SECRET!,
+  },
+  [Exchanges.OKX]: {
+    wsUrl: process.env.OKX_WEB_SOCKET!,
+    wsTradeUrl: process.env.OKX_TRADE_WEB_SOCKET!,
+    apiKey: process.env.OKX_API_KEY!,
+    apiSecret: process.env.OKX_API_SECRET!,
+  },
+  [Exchanges.MEXC]: {
+    wsUrl: process.env.MEXC_WEB_SOCKET!,
+    wsTradeUrl: process.env.MEXC_TRADE_WEB_SOCKET!,
+    apiKey: process.env.MEXC_API_KEY!,
+    apiSecret: process.env.MEXC_API_SECRET!,
+  },
+};

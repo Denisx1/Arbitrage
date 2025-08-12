@@ -9,3 +9,11 @@ export enum Pairs {
   DOTUSDT = "DOTUSDT",
   XRPUSDT = "XRPUSDT",
 }
+
+export enum Exchanges {
+  BINANCE = "BINANCE",
+  BYBIT = "BYBIT",
+  OKX = "OKX",
+  MEXC = "MEXC",
+  BINGX = "BINGX",
+}
