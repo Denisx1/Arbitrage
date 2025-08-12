@@ -38,3 +38,28 @@ npm install
 
 4. Run the bot:
 npm ts-node index.ts
+
+Usage
+The bot is started by calling the main(symbol) function in src/index.ts with the desired trading pair.
+
+Connection settings and order placement functions are configured using the builder pattern.
+
+To add new exchanges, create a new service with WebSocket and API logic accordingly.
+
+Best Practices
+Never expose your API keys publicly.
+
+Use API keys with minimal permissions for the bot.
+
+Monitor API rate limits and avoid exceeding them.
+
+Log bot actions for debugging and monitoring.
+
+Possible Improvements
+Implement error handling and WebSocket reconnection.
+
+Develop more advanced arbitrage strategies.
+
+Support additional exchanges and trading pairs.
+
+Add tests and CI/CD pipelines.
