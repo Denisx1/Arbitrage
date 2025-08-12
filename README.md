@@ -38,7 +38,7 @@ npm install
 
 4. Run the bot:
 npm ts-node index.ts
-
+```bash
 Usage
 The bot is started by calling the main(symbol) function in src/index.ts with the desired trading pair.
 
@@ -62,4 +62,3 @@ Develop more advanced arbitrage strategies.
 
 Support additional exchanges and trading pairs.
 
-Add tests and CI/CD pipelines.
