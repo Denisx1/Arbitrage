@@ -1,7 +1,6 @@
 import WebSocket from "ws";
 import { updatePriceStore } from "../utils/priceStore";
-import { convertTimestampToUTC } from "../utils/timeUtil";
-import { getBestPrices, getWeightedAvgPrice } from "../utils/util";
+import { getBestPrices } from "../utils/util";
 import { ExchangeConfig } from "../config/types";
 import { ExchngeClient } from "../types";
 export class OkxWsClient implements ExchngeClient {
@@ -20,37 +19,45 @@ export class OkxWsClient implements ExchngeClient {
     this.wsPublicUrl = okxConfig.wsUrl;
     this.wsPrivateUrl = okxConfig.wsTradeUrl;
   }
+  
   public connectPublic() {
-    const okxSymbol: string = this.symbol.replace("USDT", "-USDT");
     this.wsPublic = new WebSocket(this.wsPublicUrl);
     this.wsPublic!.on("open", () => {
-      this.wsPublic!.send(
-        JSON.stringify({
-          op: "subscribe",
-          args: [
-            {
-              channel: "books5",
-              instId: okxSymbol,
-            },
-          ],
-        })
-      );
+      this.connectOkx();
       console.log("✅ Okx connected");
     });
     this.wsPublic!.on("message", (msg) => {
-      const data = JSON.parse(msg.toString());
-      if (data.data && data.data.length > 0) {
-        data.data.forEach((item: any) => {
-          const asksPrices = item.asks.map((item: any) => [item[0], item[1]]);
-          const bidsPrices = item.bids.map((item: any) => [item[0], item[1]]);
-          const { bestAskPrice, bestBidPrice } = getBestPrices(
-            asksPrices,
-            bidsPrices
-          );
-          updatePriceStore("okx", bestAskPrice!, bestBidPrice!);
-        });
-      }
+      this.handlePublicMessage(msg.toString());
     });
     this.wsPublic!.on("error", (err) => console.error("Okx error:", err));
+  }
+
+  private connectOkx() {
+    const okxSymbol: string = this.symbol.replace("USDT", "-USDT");
+    this.wsPublic!.send(
+      JSON.stringify({
+        op: "subscribe",
+        args: [
+          {
+            channel: "books5",
+            instId: okxSymbol,
+          },
+        ],
+      })
+    );
+  }
+  private handlePublicMessage(msg: string) {
+    const data = JSON.parse(msg.toString());
+    if (data.data && data.data.length > 0) {
+      data.data.forEach((item: any) => {
+        const asksPrices = item.asks.map((item: any) => [item[0], item[1]]);
+        const bidsPrices = item.bids.map((item: any) => [item[0], item[1]]);
+        const { bestAskPrice, bestBidPrice } = getBestPrices(
+          asksPrices,
+          bidsPrices
+        );
+        updatePriceStore("okx", bestAskPrice!, bestBidPrice!);
+      });
+    }
   }
 }

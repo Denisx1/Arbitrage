@@ -5,7 +5,7 @@ import { Exchanges, Pairs } from "./pairsEnum";
 import { ExchangeBuilder } from "./config/config";
 import { ExchangesConfig, ExchngeClient } from "./types";
 
-async function main(symbol: string) {
+async function main(symbol: string): Promise<void> {
   const { byBitClient, binanceClient, bingxClient, okxClient, mexcClient } =
     highestBuilder(symbol);
 
@@ -18,7 +18,7 @@ async function main(symbol: string) {
   ]);
 }
 
-main(Pairs.DOGEUSDT);
+main(Pairs.ETHUSDT);
 
 function highestBuilder(symbol: string): {
   byBitClient: ExchngeClient;
