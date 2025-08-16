@@ -1,11 +1,55 @@
-export interface CreateBinanceOrder {
-    symbol: string;
-    side: "BUY" | "SELL";
-    type: "LIMIT";
-    quantity: number;
-    stopPrice: string;
-    takeProfitPrice: string;
-    price: number;
-    leverage: number;
-    closePosition: string;
-  }
+export interface PlaceOrderParams {
+  id: string;
+  method: string;
+  apiKey: string;
+  symbol: string;
+  side: string;
+  type: string;
+  timeInForce: string;
+  quantity: string;
+  price: string;
+  timestamp?: number;
+  signature?: string;
+}
+export interface PublicResponce {
+  stream: string;
+  data: {
+    e: string;
+    E: number;
+    T: number;
+    s: string;
+    U: number;
+    u: number;
+    pu: number;
+    b: string[][];
+    a: string[][];
+  };
+}
+export interface AuthResponce {
+  id: string;
+  status: number;
+  result: {
+    apiKey: string | null;
+    authorizedSince: number | null;
+    connectedSince: number;
+    returnRateLimits: boolean;
+    serverTime: number;
+  };
+  rateLimits: [
+    {
+      rateLimitType: string;
+      interval: string;
+      intervalNum: number;
+      limit: number;
+      count: number;
+    }
+  ];
+}
+export interface AuthRequest {
+  id: string;
+  method: string;
+}
+export interface IExchangeAuth {
+  getAuthPayload: (params: Record<string, any>) => string;
+  authorize: () => any;
+}

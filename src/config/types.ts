@@ -1,3 +1,6 @@
+import { IExchangePrivateClient, IExchangePublicClient } from "../bybit/type";
+import { Exchanges } from "../pairsEnum";
+
 export interface ExchangeConfig {
   wsUrl: string;
   wsTradeUrl: string;
@@ -16,3 +19,10 @@ export interface Config<T> {
   bingx: T;
 }
 export type Time = number | string;
+
+export type ExchangeClientMap = {
+  [Exchanges.BYBIT]: {
+    public: IExchangePublicClient;
+    private: IExchangePrivateClient;
+  };
+};
