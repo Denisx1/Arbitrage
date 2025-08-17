@@ -37,4 +37,16 @@ export const ExchangesConfig: Record<Exchanges, ExchangeConfig> = {
     apiKey: process.env.MEXC_API_KEY!,
     apiSecret: process.env.MEXC_API_SECRET!,
   },
+  [Exchanges.HTX]: {
+    wsUrl: process.env.HTX_WEB_SOCKET!,
+    wsTradeUrl: process.env.HTX_TRADE_WEB_SOCKET!,
+    apiKey: process.env.HTX_API_KEY!,
+    apiSecret: process.env.HTX_API_SECRET!,
+  },
+  [Exchanges.DERIBIT]: {
+    wsUrl: process.env.DERIBIT_WEB_SOCKET!,
+    wsTradeUrl: process.env.DERIBIT_TRADE_WEB_SOCKET!,
+    apiKey: process.env.DERIBIT_API_KEY!,
+    apiSecret: process.env.DERIBIT_API_SECRET!,
+  },
 };

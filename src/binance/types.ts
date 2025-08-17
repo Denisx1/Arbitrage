@@ -48,8 +48,12 @@ export interface AuthResponce {
 export interface AuthRequest {
   id: string;
   method: string;
+  params: {
+    apiKey: string;
+    signature: string;
+    timestamp: number;
+  };
 }
 export interface IExchangeAuth {
-  getAuthPayload: (params: Record<string, any>) => string;
-  authorize: () => any;
+  login: () => any;
 }

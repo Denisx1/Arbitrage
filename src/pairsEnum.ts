@@ -8,6 +8,7 @@ export enum Pairs {
   DOGEUSDT = "DOGEUSDT",
   DOTUSDT = "DOTUSDT",
   XRPUSDT = "XRPUSDT",
+  MX = "MXUSDT",
 }
 
 export enum Exchanges {
@@ -16,4 +17,6 @@ export enum Exchanges {
   OKX = "OKX",
   MEXC = "MEXC",
   BINGX = "BINGX",
+  HTX = "HTX",
+  DERIBIT = "DERIBIT",
 }

@@ -1,60 +1,67 @@
 import WebSocket from "ws";
 import { ExchangeConfig } from "../config/types";
-import { ByBitAuth } from "./bybitAuth";
+import { ByBitAuth, AuthByBitRequest } from "./bybitAuth";
 import { IExchangePrivateClient } from "./type";
-export class BybitPrivateWsClient{
-  private wsPrivate: WebSocket | null = null;
-  private wsPrivateUrl: string;
+import { WebSocketConector } from "../socketConnector/WebSocketConector";
+export interface OrderParams {
+  category: string;
+  symbol: string;
+  side: string;
+  orderType: string;
+  qty: string;
+  price: string;
+  timeInForce: string;
+}
+export class BybitPrivateWsClient {
   private isAuthenticated: boolean = false;
-  private bybitAuth: ByBitAuth;
-  private symbol: string;
-  constructor(byBitConfig: ExchangeConfig, symbol: string) {
-    this.wsPrivateUrl = byBitConfig.wsUrl;
-    this.symbol = symbol;
-    this.bybitAuth = new ByBitAuth();
-  }
+  private wsPrivate: WebSocket | null = null;
+  constructor(private wsManager: WebSocketConector, private auth: ByBitAuth) {}
 
   public connectPrivate() {
-    this.wsPrivate = new WebSocket(this.wsPrivateUrl);
-    this.wsPrivate.on("open", () => {
-      this.wsPrivate!.send(JSON.stringify(this.bybitAuth.getAuthPayload()));
-    });
-    this.wsPrivate.on("message", (msg) => {
-      this.handlePrivateMessage(msg.toString());
-    });
-    this.wsPrivate.on("error", (err) =>
-      console.error("Bybit Private WS error:", err)
-    );
-    this.wsPrivate.on("close", () => console.log("Bybit Private WS closed"));
-  }
-  private handlePrivateMessage(msg: WebSocket.Data) {
-    const data = JSON.parse(msg.toString());
-    if (data.op === "auth" && data.success) {
-      this.isAuthenticated = true;
-      console.log("Authenticated");
+    if (!this.auth.status) {
+      console.log("❌ Session not active, cannot place order");
+      return;
     }
+    this.wsManager.send<AuthByBitRequest<OrderParams[]>>(this.placeOrder());
   }
-  public placeOrder = async (price: number, qty: number, side: string) => {
-    if (
-      !this.isAuthenticated ||
-      this.wsPrivate!.readyState !== WebSocket.OPEN
-    ) {
-      throw new Error("WebSocket not connected or authenticated");
-    }
-    const orderPayload = {
+  public placeOrder() // price: number, // symbol: string,
+  // qty: number,
+  // side: string
+  {
+    return {
       op: "spread.order",
       args: [
         {
           category: "linear",
-          symbol: this.symbol,
-          side,
+          symbol: "BTCUSDT",
+          side: "Buy",
           orderType: "Limit",
-          qty: qty.toString(),
-          price: price.toString(),
+          qty: "0.001",
+          price: "20000",
           timeInForce: "GoodTillCancel",
         },
       ],
     };
-    this.wsPrivate!.send(JSON.stringify(orderPayload));
-  };
+    // if (
+    //   !this.isAuthenticated ||
+    //   this.wsManager.ws?.readyState !== WebSocket.OPEN
+    // ) {
+    //   throw new Error("WebSocket not connected or authenticated");
+    // }
+    // const orderPayload: AuthByBitRequest<OrderParams[]> = {
+    //   op: "spread.order",
+    //   args: [
+    //     {
+    //       category: "linear",
+    //       symbol: symbol,
+    //       side,
+    //       orderType: "Limit",
+    //       qty: qty.toString(),
+    //       price: price.toString(),
+    //       timeInForce: "GoodTillCancel",
+    //     },
+    //   ],
+    // };
+    // return orderPayload;
+  }
 }

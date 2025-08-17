@@ -1,10 +1,10 @@
 import { PlaceOrderParams } from "../binance/types";
 
 export interface IExchangeAuth {
-  checkSession: () => void;
+  login: () => void;
 }
 export interface IExchangePublicClient {
-  connectPublic: () => void;
+  subscribeOrderBook: () => void;
 }
 export interface IExchangePrivateClient {
   connect: (order: Partial<PlaceOrderParams>) => void;

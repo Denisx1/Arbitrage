@@ -1,7 +1,5 @@
 import { Config, PriceData } from "../config/types";
 import { findBestArbitrageOpportunity } from "../arbitrage/service";
-import { PublicBinanceWsClient } from "../binance/publicData/publickClient";
-import { BinanceWebSocketConnector } from "../binance/BinanceWsService";
 
 export const lastPriceStore: Config<PriceData> = {
   binance: {
@@ -24,6 +22,14 @@ export const lastPriceStore: Config<PriceData> = {
     bestBuy: null,
     bestSell: null,
   },
+  htx: {
+    bestBuy: null,
+    bestSell: null,
+  },
+  deribit: {
+    bestBuy: null,
+    bestSell: null,
+  },
 };
 
 export function updatePriceStore(
@@ -32,23 +38,23 @@ export function updatePriceStore(
   bestSell: number
 ) {
   lastPriceStore[exchange as keyof Config<PriceData>] = { bestBuy, bestSell };
-
+  console.log(lastPriceStore)
   const allConnected = Object.values(lastPriceStore).every(
     (item) => item.bestBuy !== null && item.bestSell !== null
   );
-  // if (!allConnected) {
-  //   console.log(
-  //     `Waiting for all exchanges to send data. Missing data from: ${Object.entries(
-  //       lastPriceStore
-  //     )
-  //       .filter(([_, data]) => data.bestBuy === null || data.bestSell === null)
-  //       .map(([key]) => key)
-  //       .join(", ")}`
-  //   );
-  //   return;
-  // }
+  if (!allConnected) {
+    console.log(
+      `Waiting for all exchanges to send data. Missing data from: ${Object.entries(
+        lastPriceStore
+      )
+        .filter(([_, data]) => data.bestBuy === null || data.bestSell === null)
+        .map(([key]) => key)
+        .join(", ")}`
+    );
+    return;
+  }
   const bestArbitrageOpportunity = findBestArbitrageOpportunity(lastPriceStore);
   if (bestArbitrageOpportunity) {
-    // console.log("Best arbitrage opportunity found:", bestArbitrageOpportunity);
+    console.log("Best arbitrage opportunity found:", bestArbitrageOpportunity);
   }
 }

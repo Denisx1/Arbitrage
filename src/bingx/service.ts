@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 
 import zlib from "zlib";
-import { getBestPrices, getWeightedAvgPrice } from "../utils/util";
+import { getBestPrices } from "../utils/util";
 import { updatePriceStore } from "../utils/priceStore";
 import { ExchngeClient } from "../types";
 import { ExchangeConfig } from "../config/types";

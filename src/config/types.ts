@@ -17,12 +17,42 @@ export interface Config<T> {
   okx: T;
   mexc: T;
   bingx: T;
+  htx: T;
+  deribit: T;
 }
 export type Time = number | string;
 
-export type ExchangeClientMap = {
-  [Exchanges.BYBIT]: {
-    public: IExchangePublicClient;
-    private: IExchangePrivateClient;
+export interface ExchangesReturn<T> {
+  byBitClient: T;
+  binanceClient: T;
+  bingxClient?: T;
+  okxClient: T;
+  mexcClient?: T;
+  htxClient?: T;
+  deribitClient?: T;
+}
+export interface BingXRequestPublicParams {
+  id: string;
+  reqType: string;
+  dataType: string;
+}
+
+export interface BybitRequestPublicParams {
+  op: string;
+  args: string[];
+}
+export interface MexcRequestPublicParams {
+  method: string;
+  param: {
+    symbol: string;
   };
-};
+}
+export interface OkxRequestPublicParams {
+  op: string;
+  args: [
+    {
+      channel: string;
+      instId: string;
+    }
+  ];
+}

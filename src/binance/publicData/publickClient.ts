@@ -1,19 +1,22 @@
 import { IExchangePublicClient } from "../../bybit/type";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
 import { updatePriceStore } from "../../utils/priceStore";
-import { getBestPrices } from "../../utils/util";
-import { BinanceWebSocketConnector } from "../BinanceWsService";
-import { PublicResponce } from "../types";
+import { getBestBidAsk, getBestPrices } from "../../utils/util";
 
 export class PublicBinanceWsClient implements IExchangePublicClient {
-  constructor(private binanceWsService: BinanceWebSocketConnector) {}
-  public connectPublic() {
-    this.binanceWsService.onMessage<PublicResponce>((data) =>
+  constructor(private binanceWsService: WebSocketConector) {}
+  public subscribeOrderBook() {
+    this.binanceWsService.onMessage((data: Buffer) =>
       this.handlePublicMessage(data)
     );
   }
-  private handlePublicMessage(data: PublicResponce): void {
-    const { a, b } = data.data;
-    const { bestAskPrice, bestBidPrice } = getBestPrices(a, b);
-    updatePriceStore("binance", bestAskPrice, bestBidPrice);
+  private handlePublicMessage(data: Buffer): void {
+    const parsedData = JSON.parse(data.toString());
+    const { a, b } = parsedData.data;
+    // console.log('binance', a, b)
+    const { bestAskPrice, bestBidPrice } = getBestBidAsk(a, b);
+    updatePriceStore("binance", bestAskPrice!, bestBidPrice!);
   }
 }
+
+

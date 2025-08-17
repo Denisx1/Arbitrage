@@ -10,11 +10,10 @@ export interface ArbitrageOpportunity {
   };
   priceDiff: number;
   profitPercent: number;
-
 }
 export function findBestArbitrageOpportunity(
   priceStore: Config<PriceData>,
-  thresholdPercent: number = 3
+  thresholdPercent: number = 4
 ): ArbitrageOpportunity | undefined {
   const exchanges = Object.keys(priceStore);
   let bestBuyExchange = "";
@@ -50,13 +49,15 @@ export function findBestArbitrageOpportunity(
 
   if (bestBuyExchange && bestSellExchange) {
     return {
-      bestBuy:{
+      bestBuy: {
         exchange: bestBuyExchange,
-        price: priceStore[bestBuyExchange as keyof Config<PriceData>]!.bestSell!,
+        price:
+          priceStore[bestBuyExchange as keyof Config<PriceData>]!.bestSell!,
       },
-      bestSell:{
+      bestSell: {
         exchange: bestSellExchange,
-        price: priceStore[bestSellExchange as keyof Config<PriceData>]!.bestBuy!,
+        price:
+          priceStore[bestSellExchange as keyof Config<PriceData>]!.bestBuy!,
       },
       priceDiff: bestPriceDiff,
       profitPercent: bestPercentDiff,

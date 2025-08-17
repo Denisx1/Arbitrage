@@ -2,29 +2,28 @@ import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 import fs from "fs";
 import { IExchangeAuth } from "../../bybit/type";
-import { BinanceWebSocketConnector } from "../BinanceWsService";
+
 import { AuthRequest, AuthResponce } from "../types";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
 
 export class BinanceAuth implements IExchangeAuth {
   private isAuthorized = false;
-  constructor(private wsManager: BinanceWebSocketConnector) {}
+  constructor(private wsManager: WebSocketConector) {}
 
-  public async checkSession() {
-    this.wsManager.onMessage<AuthResponce>(async (data: AuthResponce) => {
-      if (data.result.apiKey === null) {
-        const authMsg = await this.authorize();
-        this.wsManager.send(authMsg);
+  public async login() {
+    this.wsManager.onMessage(async (data: Buffer) => {
+      const parsedData = JSON.parse(data.toString());
+      if (parsedData.result.apiKey === null) {
+        console.log("❌ Session not active, cannot place order");
+        this.isAuthorized = false;
       } else {
         this.isAuthorized = true;
         console.log("✅ Authenticated private WebSocket Binance");
       }
     });
-    this.wsManager.send<AuthRequest>({
-      id: uuidv4(),
-      method: "session.status",
-    });
+    this.wsManager.send<AuthRequest>(await this.authorize());
   }
-  private async authorize() {
+  private async authorize(): Promise<AuthRequest> {
     const pemContent = fs.readFileSync(
       process.env.BINANCE_PRIVATE_URL!,
       "utf8"
