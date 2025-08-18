@@ -1,58 +1,113 @@
-import { Config, PriceData } from "../config/types";
+import { Config } from "../config/types";
 import { findBestArbitrageOpportunity } from "../arbitrage/service";
+import { PriceDataFirst } from "./util";
 
-export const lastPriceStore: Config<PriceData> = {
+export const lastPriceStore: Config<PriceDataFirst> = {
   binance: {
-    bestBuy: null,
-    bestSell: null,
+    bestSell: {
+      price: 0,
+      volume: 0,
+    },
+    bestBuy: {
+      price: 0,
+      volume: 0,
+    },
   },
   bybit: {
-    bestBuy: null,
-    bestSell: null,
+    bestSell: {
+      price: 0,
+      volume: 0,
+    },
+    bestBuy: {
+      price: 0,
+      volume: 0,
+    },
   },
   okx: {
-    bestBuy: null,
-    bestSell: null,
+    bestBuy: {
+      price: 0,
+      volume: 0,
+    },
+    bestSell: {
+      price: 0,
+      volume: 0,
+    },
   },
   mexc: {
-    bestBuy: null,
-    bestSell: null,
+    bestBuy: {
+      price: 0,
+      volume: 0,
+    },
+    bestSell: {
+      price: 0,
+      volume: 0,
+    },
   },
   bingx: {
-    bestBuy: null,
-    bestSell: null,
+    bestBuy: {
+      price: 0,
+      volume: 0,
+    },
+    bestSell: {
+      price: 0,
+      volume: 0,
+    },
   },
   htx: {
-    bestBuy: null,
-    bestSell: null,
+    bestBuy: {
+      price: 0,
+      volume: 0,
+    },
+    bestSell: {
+      price: 0,
+      volume: 0,
+    },
   },
   deribit: {
-    bestBuy: null,
-    bestSell: null,
+    bestBuy: {
+      price: 0,
+      volume: 0,
+    },
+    bestSell: {
+      price: 0,
+      volume: 0,
+    },
   },
 };
 
 export function updatePriceStore(
   exchange: string,
-  bestBuy: number,
-  bestSell: number
+  bestBuy: PriceDataFirst["bestBuy"],
+  bestSell: PriceDataFirst["bestSell"]
 ) {
-  lastPriceStore[exchange as keyof Config<PriceData>] = { bestBuy, bestSell };
-  console.log(lastPriceStore)
+  lastPriceStore[exchange as keyof Config<PriceDataFirst>] = {
+    bestBuy,
+    bestSell,
+  };
+
   const allConnected = Object.values(lastPriceStore).every(
-    (item) => item.bestBuy !== null && item.bestSell !== null
+    (item) => item.bestBuy.price !== 0 && item.bestSell.price !== 0
   );
+
+  const missingData = Object.entries(lastPriceStore).reduce<string[]>(
+    (acc, [key, data]) => {
+      if (data.bestBuy.price === 0 || data.bestSell.price === 0) {
+        acc.push(key);
+      }
+      return acc;
+    },
+    []
+  );
+
   if (!allConnected) {
     console.log(
-      `Waiting for all exchanges to send data. Missing data from: ${Object.entries(
-        lastPriceStore
-      )
-        .filter(([_, data]) => data.bestBuy === null || data.bestSell === null)
-        .map(([key]) => key)
-        .join(", ")}`
+      `Waiting for all exchanges to send data. Missing data from: ${missingData.join(
+        ", "
+      )}`
     );
     return;
   }
+
   const bestArbitrageOpportunity = findBestArbitrageOpportunity(lastPriceStore);
   if (bestArbitrageOpportunity) {
     console.log("Best arbitrage opportunity found:", bestArbitrageOpportunity);

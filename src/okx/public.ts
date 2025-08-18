@@ -1,7 +1,7 @@
 import { IExchangePublicClient } from "../bybit/type";
 import { WebSocketConector } from "../socketConnector/WebSocketConector";
 import { updatePriceStore } from "../utils/priceStore";
-import { getBestBidAsk, getBestPrices } from "../utils/util";
+import { getBestBidAsk } from "../utils/util";
 
 export class OkxPublickWsClient implements IExchangePublicClient {
   constructor(private wsManager: WebSocketConector) {}
@@ -15,11 +15,11 @@ export class OkxPublickWsClient implements IExchangePublicClient {
         const asksPrices = item.asks.map((item: any) => [item[0], item[1]]);
         const bidsPrices = item.bids.map((item: any) => [item[0], item[1]]);
         // console.log("okx", asksPrices, bidsPrices);
-        const { bestAskPrice, bestBidPrice } = getBestBidAsk(
+        const { bestBuy, bestSell } = getBestBidAsk(
           asksPrices,
           bidsPrices
         );
-        updatePriceStore("okx", bestAskPrice!, bestBidPrice!);
+        updatePriceStore("okx", bestBuy!, bestSell!);
       });
     }
   }

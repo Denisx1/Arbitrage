@@ -23,11 +23,11 @@ export class DeribitPublicWs implements IExchangePublicClient {
     ]);
     if(!asksPrices.length || !bidsPrices.length) return;
  
-    const { bestAskPrice, bestBidPrice } = getBestBidAsk(
+    const { bestBuy, bestSell } = getBestBidAsk(
       asksPrices,
       bidsPrices
     );
 
-    updatePriceStore("deribit", bestAskPrice!, bestBidPrice!);
+    updatePriceStore("deribit", bestBuy!, bestSell!);
   }
 }

@@ -7,10 +7,6 @@ export interface ExchangeConfig {
   apiKey: string;
   apiSecret: string;
 }
-export interface PriceData {
-  bestBuy: number | null;
-  bestSell: number | null;
-}
 export interface Config<T> {
   binance: T;
   bybit: T;

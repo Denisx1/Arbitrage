@@ -2,7 +2,7 @@ import { ExchangeConfig } from "../config/types";
 import WebSocket from "ws";
 import { updatePriceStore } from "../utils/priceStore";
 import { IExchangePublicClient } from "./type";
-import { getBestBidAsk, getBestPrices } from "../utils/util";
+import { getBestBidAsk } from "../utils/util";
 import { WebSocketConector } from "../socketConnector/WebSocketConector";
 export class BybitPublickWsClient implements IExchangePublicClient {
   constructor(private wsManager: WebSocketConector) {}
@@ -15,7 +15,7 @@ export class BybitPublickWsClient implements IExchangePublicClient {
 
     const { a, b } = data.data;
     if (!a.length || !b.length) return;
-    const { bestAskPrice, bestBidPrice } = getBestBidAsk(a, b);
-    updatePriceStore("bybit", bestAskPrice!, bestBidPrice!);
+    const { bestBuy, bestSell } = getBestBidAsk(a, b);
+    updatePriceStore("bybit", bestBuy!, bestSell!);
   }
 }

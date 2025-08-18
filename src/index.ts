@@ -17,16 +17,16 @@ async function main(symbol: string): Promise<void> {
     htxClient,
     deribitClient,
   } = publicClients(symbol);
-  // const {
-  //   binanceClient: binancePrivateClient,
-  //   byBitClient: byBitPrivateClient,
-  //   okxClient: okxPrivateClient,
-  // } = await privateClients();
-  // await Promise.all([
-  //   binancePrivateClient.login(),
-  //   byBitPrivateClient.login(),
-  //   okxPrivateClient.login(),
-  // ]);
+  const {
+    binanceClient: binancePrivateClient,
+    byBitClient: byBitPrivateClient,
+    okxClient: okxPrivateClient,
+  } = await privateClients();
+  await Promise.all([
+    binancePrivateClient.login(),
+    byBitPrivateClient.login(),
+    okxPrivateClient.login(),
+  ]);
 
   await Promise.all([
     byBitClient.subscribeOrderBook(),
@@ -39,7 +39,7 @@ async function main(symbol: string): Promise<void> {
   ]);
 }
 
-main(Pairs.ADAUSDT);
+main(Pairs.DOGEUSDT);
 
 async function privateClients(): Promise<ExchangesReturn<IExchangeAuth>> {
   const builder = new ExchangeBuilder()
