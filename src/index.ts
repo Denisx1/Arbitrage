@@ -39,7 +39,7 @@ async function main(symbol: string): Promise<void> {
   ]);
 }
 
-main(Pairs.DOGEUSDT);
+main(Pairs.LINKUSDT);
 
 async function privateClients(): Promise<ExchangesReturn<IExchangeAuth>> {
   const builder = new ExchangeBuilder()

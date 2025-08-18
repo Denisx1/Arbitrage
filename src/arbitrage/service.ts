@@ -48,9 +48,9 @@ export function findBestArbitrageOpportunity(
       if (percentDiff > thresholdPercent && percentDiff > bestPercentDiff) {
         if (
           priceStore[buyEx as keyof Config<PriceDataFirst>]!.bestSell.volume >
-            10 &&
+            3 &&
           priceStore[sellEx as keyof Config<PriceDataFirst>]!.bestBuy.volume >
-            10
+            3
         ) {
           bestBuyExchange = buyEx;
           bestSellExchange = sellEx;

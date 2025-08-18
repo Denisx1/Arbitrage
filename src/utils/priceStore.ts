@@ -84,7 +84,6 @@ export function updatePriceStore(
     bestBuy,
     bestSell,
   };
-
   const allConnected = Object.values(lastPriceStore).every(
     (item) => item.bestBuy.price !== 0 && item.bestSell.price !== 0
   );
