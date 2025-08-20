@@ -1,7 +1,8 @@
-import { IExchangePublicClient } from "../../bybit/type";
-import { WebSocketConector } from "../../socketConnector/WebSocketConector";
-import { updatePriceStore } from "../../utils/priceStore";
-import { getBestBidAsk } from "../../utils/util";
+import { IExchangePublicClient } from "../../../exchanges/bybit/type";
+import { Exchanges } from "../../../pairsEnum";
+import { WebSocketConector } from "../../../socketConnector/WebSocketConector";
+import { updatePriceStore } from "../../../utils/priceStore";
+import { getBestBidAsk } from "../../../utils/util";
 
 export class PublicBinanceWsClient implements IExchangePublicClient {
   constructor(private binanceWsService: WebSocketConector) {}
@@ -15,7 +16,7 @@ export class PublicBinanceWsClient implements IExchangePublicClient {
     const { a, b } = parsedData.data;
     // console.log('binance', a, b)
     const { bestBuy, bestSell } = getBestBidAsk(a, b);
-    updatePriceStore("binance", bestBuy!, bestSell!);
+    updatePriceStore(Exchanges.BINANCE, bestBuy!, bestSell!);
   }
 }
 

@@ -54,6 +54,3 @@ export interface AuthRequest {
     timestamp: number;
   };
 }
-export interface IExchangeAuth {
-  login: () => any;
-}

@@ -1,7 +1,7 @@
 import { createHmac } from "crypto";
-
-import { WebSocketConector } from "../socketConnector/WebSocketConector";
 import { IExchangeAuth } from "../bybit/type";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
+
 interface AuthOkxRequest {
   op: string;
   args: {

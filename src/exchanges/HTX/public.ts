@@ -1,7 +1,8 @@
-import { WebSocketConector } from "../socketConnector/WebSocketConector";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
 import zlib from "zlib";
-import { updatePriceStore } from "../utils/priceStore";
-import { getBestBidAsk } from "../utils/util";
+import { updatePriceStore } from "../../utils/priceStore";
+import { getBestBidAsk } from "../../utils/util";
+import { Exchanges } from "../../pairsEnum";
 export class HTXWsPublicClient {
   constructor(private wsManager: WebSocketConector) {}
   public subscribeOrderBook() {
@@ -16,6 +17,6 @@ export class HTXWsPublicClient {
     if (!bids || !asks) return;
     // console.log('htx', asks, bids)
     const { bestBuy, bestSell } = getBestBidAsk(asks, bids);
-    updatePriceStore("htx", bestBuy!, bestSell!)
+    updatePriceStore(Exchanges.HTX, bestBuy!, bestSell!)
   }
 }

@@ -1,7 +1,8 @@
+import { Exchanges } from "../../pairsEnum";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
+import { updatePriceStore } from "../../utils/priceStore";
+import { getBestBidAsk } from "../../utils/util";
 import { IExchangePublicClient } from "../bybit/type";
-import { WebSocketConector } from "../socketConnector/WebSocketConector";
-import { updatePriceStore } from "../utils/priceStore";
-import { getBestBidAsk } from "../utils/util";
 
 export class OkxPublickWsClient implements IExchangePublicClient {
   constructor(private wsManager: WebSocketConector) {}
@@ -15,11 +16,8 @@ export class OkxPublickWsClient implements IExchangePublicClient {
         const asksPrices = item.asks.map((item: any) => [item[0], item[1]]);
         const bidsPrices = item.bids.map((item: any) => [item[0], item[1]]);
         // console.log("okx", asksPrices, bidsPrices);
-        const { bestBuy, bestSell } = getBestBidAsk(
-          asksPrices,
-          bidsPrices
-        );
-        updatePriceStore("okx", bestBuy!, bestSell!);
+        const { bestBuy, bestSell } = getBestBidAsk(asksPrices, bidsPrices);
+        updatePriceStore(Exchanges.OKX, bestBuy!, bestSell!);
       });
     }
   }

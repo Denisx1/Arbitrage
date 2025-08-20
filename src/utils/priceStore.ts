@@ -1,6 +1,7 @@
 import { Config } from "../config/types";
 import { findBestArbitrageOpportunity } from "../arbitrage/service";
 import { PriceDataFirst } from "./util";
+import { routeArbitrage } from "../arbitrage/routeArbitrage";
 
 export const lastPriceStore: Config<PriceDataFirst> = {
   binance: {
@@ -13,7 +14,7 @@ export const lastPriceStore: Config<PriceDataFirst> = {
       volume: 0,
     },
   },
-  bybit: {
+  byBit: {
     bestSell: {
       price: 0,
       volume: 0,
@@ -84,6 +85,7 @@ export function updatePriceStore(
     bestBuy,
     bestSell,
   };
+
   const allConnected = Object.values(lastPriceStore).every(
     (item) => item.bestBuy.price !== 0 && item.bestSell.price !== 0
   );
@@ -109,6 +111,6 @@ export function updatePriceStore(
 
   const bestArbitrageOpportunity = findBestArbitrageOpportunity(lastPriceStore);
   if (bestArbitrageOpportunity) {
-    console.log("Best arbitrage opportunity found:", bestArbitrageOpportunity);
+    routeArbitrage(bestArbitrageOpportunity);
   }
 }

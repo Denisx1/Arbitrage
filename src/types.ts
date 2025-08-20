@@ -33,13 +33,13 @@ export const ExchangesConfig: Record<Exchanges, ExchangeConfig> = {
   },
   [Exchanges.MEXC]: {
     wsUrl: process.env.MEXC_WEB_SOCKET!,
-    wsTradeUrl: process.env.MEXC_TRADE_WEB_SOCKET!,
+    wsTradeUrl: process.env.MEXC_WEB_SOCKET_TRADE!,
     apiKey: process.env.MEXC_API_KEY!,
     apiSecret: process.env.MEXC_API_SECRET!,
   },
   [Exchanges.HTX]: {
     wsUrl: process.env.HTX_WEB_SOCKET!,
-    wsTradeUrl: process.env.HTX_TRADE_WEB_SOCKET!,
+    wsTradeUrl: process.env.HTX_WEB_SOCKET_TRADE!,
     apiKey: process.env.HTX_API_KEY!,
     apiSecret: process.env.HTX_API_SECRET!,
   },

@@ -8,25 +8,31 @@ import {
   OkxRequestPublicParams,
 } from "./types";
 import { Exchanges } from "../pairsEnum";
-import { IExchangeAuth, IExchangePublicClient } from "../bybit/type";
-import { PublicBinanceWsClient } from "../binance/publicData/publickClient";
-import { BinanceAuth } from "../binance/private/BinanceAuth";
+import { IExchangeAuth, IExchangePublicClient } from "../exchanges/bybit/type";
+import { PublicBinanceWsClient } from "../arbitrage/binance/publicData/publickClient";
+import { BinanceAuth } from "../arbitrage/binance/private/BinanceAuth";
 import { WebSocketConector } from "../socketConnector/WebSocketConector";
-import { ByBitAuth } from "../bybit/bybitAuth";
-import { BybitPublickWsClient } from "../bybit/bybitPublickClient";
+import { ByBitAuth } from "../exchanges/bybit/bybitAuth";
+import { BybitPublickWsClient } from "../exchanges/bybit/bybitPublickClient";
 import { ExchangesConfig } from "../types";
-import { BingXPublickWsClient } from "../bingx/public";
-import { MexcPublickWsClient } from "../mexc/public";
-import { OkxPublickWsClient } from "../okx/public";
-import { AuthOkx } from "../okx/authOkx";
-import { HTXWsPublicClient } from "../HTX/public";
-import { DeribitPublicWs } from "../deribit/public";
+import { BingXPublickWsClient } from "../exchanges/bingx/public";
+import { MexcPublickWsClient } from "../exchanges/mexc/public";
+
+import { HTXWsPublicClient } from "../exchanges/HTX/public";
+import { DeribitPublicWs } from "../exchanges/deribit/public";
+import { AuthDeribitWs } from "../exchanges/deribit/auth";
+import { HTXAuth } from "../exchanges/HTX/private";
+import { MexcAuth } from "../exchanges/mexc/private";
+import { BingXAuth } from "../exchanges/bingx/private";
+import { HandleListenKey } from "../exchanges/bingx/handleListenKey";
+import { AuthOkx } from "../exchanges/okx/authOkx";
+import { OkxPublickWsClient } from "../exchanges/okx/public";
 
 export class ExchangeBuilder {
   private config: Partial<Config<ExchangeConfig>> = {};
 
   setBybitConfig(config: ExchangeConfig) {
-    this.config.bybit = config;
+    this.config.byBit = config;
     return this;
   }
   setBinanceConfig(config: ExchangeConfig) {
@@ -59,7 +65,7 @@ export class ExchangeBuilder {
     switch (exchangeName) {
       case Exchanges.BYBIT:
         const byBitConnector = new WebSocketConector(
-          this.config.bybit!.wsTradeUrl
+          this.config.byBit!.wsTradeUrl
         );
         await byBitConnector.connectWebSocket();
         const authByBit = new ByBitAuth(byBitConnector);
@@ -76,13 +82,47 @@ export class ExchangeBuilder {
           binanceClient: auth,
         };
       case Exchanges.OKX: {
-        const okxConnector = new WebSocketConector(this.config.okx!.wsTradeUrl);
+        const okxConnector = new WebSocketConector(this.config.okx!.wsUrl);
 
         await okxConnector.connectWebSocket();
 
         const authOkx = new AuthOkx(okxConnector);
         return {
           okxClient: authOkx,
+        };
+      }
+      case Exchanges.DERIBIT: {
+        const deribitConnector = new WebSocketConector(
+          this.config.deribit!.wsUrl
+        );
+        await deribitConnector.connectWebSocket();
+        const authDeribit = new AuthDeribitWs(deribitConnector);
+        return {
+          deribitClient: authDeribit,
+        };
+      }
+      case Exchanges.HTX: {
+        const htxConnector = new WebSocketConector(this.config.htx!.wsTradeUrl);
+        await htxConnector.connectWebSocket();
+        const authHTX = new HTXAuth(htxConnector);
+        return {
+          htxClient: authHTX,
+        };
+      }
+      case Exchanges.MEXC: {
+        const mexcConnector = new WebSocketConector(this.config.mexc!.wsUrl);
+        await mexcConnector.connectWebSocket();
+        const authMexc = new MexcAuth(mexcConnector);
+        return {
+          mexcClient: authMexc,
+        };
+      }
+      case Exchanges.BINGX: {
+        const handleListenKey = new HandleListenKey();
+        const authBingX = new BingXAuth(handleListenKey);
+
+        return {
+          bingxClient: authBingX,
         };
       }
       default:
@@ -102,7 +142,7 @@ export class ExchangeBuilder {
     const deribitSymbol: string = symbol.replace("USDT", "_USDC-PERPETUAL");
     switch (exchangeName) {
       case Exchanges.BYBIT: {
-        const byBitConnector = new WebSocketConector(this.config.bybit!.wsUrl);
+        const byBitConnector = new WebSocketConector(this.config.byBit!.wsUrl);
         byBitConnector.connectWebSocket<BybitRequestPublicParams>({
           op: "subscribe",
           args: [`orderbook.500.${symbol}`],
@@ -176,7 +216,6 @@ export class ExchangeBuilder {
           params: {
             channels: [`book.${deribitSymbol}.100ms`],
           },
-          
         });
         return {
           deribitClient: new DeribitPublicWs(deribitConnector),

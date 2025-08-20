@@ -1,7 +1,8 @@
 import { IExchangePublicClient } from "../bybit/type";
-import { WebSocketConector } from "../socketConnector/WebSocketConector";
-import { updatePriceStore } from "../utils/priceStore";
-import { getBestBidAsk } from "../utils/util";
+import { Exchanges } from "../../pairsEnum";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
+import { updatePriceStore } from "../../utils/priceStore";
+import { getBestBidAsk } from "../../utils/util";
 
 export class DeribitPublicWs implements IExchangePublicClient {
   constructor(private wsManager: WebSocketConector) {}
@@ -28,6 +29,6 @@ export class DeribitPublicWs implements IExchangePublicClient {
       bidsPrices
     );
 
-    updatePriceStore("deribit", bestBuy!, bestSell!);
+    updatePriceStore(Exchanges.DERIBIT, bestBuy!, bestSell!);
   }
 }

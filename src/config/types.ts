@@ -1,4 +1,4 @@
-import { IExchangePrivateClient, IExchangePublicClient } from "../bybit/type";
+import { IExchangePrivateClient, IExchangePublicClient } from "../exchanges/bybit/type";
 import { Exchanges } from "../pairsEnum";
 
 export interface ExchangeConfig {
@@ -9,7 +9,7 @@ export interface ExchangeConfig {
 }
 export interface Config<T> {
   binance: T;
-  bybit: T;
+  byBit: T;
   okx: T;
   mexc: T;
   bingx: T;
@@ -21,11 +21,11 @@ export type Time = number | string;
 export interface ExchangesReturn<T> {
   byBitClient: T;
   binanceClient: T;
-  bingxClient?: T;
+  bingxClient: T;
   okxClient: T;
-  mexcClient?: T;
-  htxClient?: T;
-  deribitClient?: T;
+  mexcClient: T;
+  htxClient: T;
+  deribitClient: T;
 }
 export interface BingXRequestPublicParams {
   id: string;

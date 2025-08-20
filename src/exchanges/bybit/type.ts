@@ -1,7 +1,8 @@
-import { PlaceOrderParams } from "../binance/types";
+import { PlaceOrderParams } from "../../arbitrage/binance/types";
 
 export interface IExchangeAuth {
   login: () => void;
+  readonly status: boolean;
 }
 export interface IExchangePublicClient {
   subscribeOrderBook: () => void;

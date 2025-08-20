@@ -1,7 +1,7 @@
 import { BinanceAuth } from "./BinanceAuth";
 import { PlaceOrderParams } from "../types";
-import { IExchangePrivateClient } from "../../bybit/type";
-import { WebSocketConector } from "../../socketConnector/WebSocketConector";
+import { IExchangePrivateClient } from "../../../exchanges/bybit/type";
+import { WebSocketConector } from "../../../socketConnector/WebSocketConector";
 
 export class BinancePrivateWsClient implements IExchangePrivateClient {
   constructor(

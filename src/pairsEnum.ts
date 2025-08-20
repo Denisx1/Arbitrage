@@ -12,11 +12,11 @@ export enum Pairs {
 }
 
 export enum Exchanges {
-  BINANCE = "BINANCE",
-  BYBIT = "BYBIT",
-  OKX = "OKX",
-  MEXC = "MEXC",
-  BINGX = "BINGX",
-  HTX = "HTX",
-  DERIBIT = "DERIBIT",
+  BINANCE = "binance",
+  BYBIT = "byBit",
+  OKX = "okx",
+  MEXC = "mexc",
+  BINGX = "bingx",
+  HTX = "htx",
+  DERIBIT = "deribit",
 }

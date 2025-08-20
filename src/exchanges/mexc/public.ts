@@ -1,7 +1,8 @@
-import { WebSocketConector } from "../socketConnector/WebSocketConector";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
 import { IExchangePublicClient } from "../bybit/type";
-import { getBestBidAsk } from "../utils/util";
-import { updatePriceStore } from "../utils/priceStore";
+import { getBestBidAsk } from "../../utils/util";
+import { updatePriceStore } from "../../utils/priceStore";
+import { Exchanges } from "../../pairsEnum";
 
 export class MexcPublickWsClient implements IExchangePublicClient {
   constructor(private wsManager: WebSocketConector) {}
@@ -17,6 +18,6 @@ export class MexcPublickWsClient implements IExchangePublicClient {
     const bidsPrices = bids.map((item: any) => [item[0], item[1]]);
     // console.log('mexc', asksPrices, bidsPrices)
    const { bestBuy, bestSell } = getBestBidAsk(asksPrices, bidsPrices);
-    updatePriceStore("mexc", bestBuy!, bestSell!);
+    updatePriceStore(Exchanges.MEXC, bestBuy!, bestSell!);
   }
 }

@@ -1,6 +1,6 @@
 import { createHmac } from "crypto";
 import { IExchangeAuth } from "./type";
-import { WebSocketConector } from "../socketConnector/WebSocketConector";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
 import { OrderParams } from "./bybitPrivateClient";
 
 type ArgAuthType = string | number;
@@ -27,6 +27,7 @@ export class ByBitAuth implements IExchangeAuth {
     this.wsManager.onMessage((data: Buffer) => {
       const parsedData = JSON.parse(data.toString());
       if (parsedData.op === "auth" && parsedData.retMsg === "OK") {
+
         this.isAuthorized = true;
         console.log("✅ Authenticated private WebSocket ByBit");
       } else {

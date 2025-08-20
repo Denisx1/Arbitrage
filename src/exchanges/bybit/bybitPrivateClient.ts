@@ -1,8 +1,8 @@
 import WebSocket from "ws";
-import { ExchangeConfig } from "../config/types";
+import { ExchangeConfig } from "../../config/types";
 import { ByBitAuth, AuthByBitRequest } from "./bybitAuth";
 import { IExchangePrivateClient } from "./type";
-import { WebSocketConector } from "../socketConnector/WebSocketConector";
+import { WebSocketConector } from "../../socketConnector/WebSocketConector";
 export interface OrderParams {
   category: string;
   symbol: string;

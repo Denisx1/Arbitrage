@@ -16,7 +16,7 @@ export interface ArbitrageOpportunity {
 }
 export function findBestArbitrageOpportunity(
   priceStore: Config<PriceDataFirst>,
-  thresholdPercent: number = 1
+  thresholdPercent: number = 0.002
 ): ArbitrageOpportunity | undefined {
   const exchanges = Object.keys(priceStore);
   let bestBuyExchange = "";

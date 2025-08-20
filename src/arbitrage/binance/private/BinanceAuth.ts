@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 import fs from "fs";
-import { IExchangeAuth } from "../../bybit/type";
+import { IExchangeAuth } from "../../../exchanges/bybit/type";
 
 import { AuthRequest, AuthResponce } from "../types";
-import { WebSocketConector } from "../../socketConnector/WebSocketConector";
+import { WebSocketConector } from "../../../socketConnector/WebSocketConector";
 
 export class BinanceAuth implements IExchangeAuth {
   private isAuthorized = false;
