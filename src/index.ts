@@ -1,13 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "../.env" });
 import { Pairs } from "./pairsEnum";
-
 import { IExchangeAuth } from "./exchanges/bybit/type";
 import { ExchangesReturn } from "./config/types";
-
 import { initPrivateClients } from "./clients";
 import { initPublicClients } from "./clients";
-import { getPrivateClients } from "./clients";
 
 async function main(symbol: string): Promise<ExchangesReturn<IExchangeAuth>> {
   const privateClients = await initPrivateClients();
@@ -18,4 +15,4 @@ async function main(symbol: string): Promise<ExchangesReturn<IExchangeAuth>> {
   return privateClients;
 }
 
-main(Pairs.ADAUSDT);
+main(Pairs.ETHUSDT);

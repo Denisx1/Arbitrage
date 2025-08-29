@@ -1,28 +1,33 @@
 import { Config } from "../config/types";
 import { PriceDataFirst } from "../utils/util";
+import { managerArbitrage, ManagerArbitrage } from "./managerArbitrage";
+import { routeArbitrage } from "./routeArbitrage";
 export interface ArbitrageOpportunity {
   bestBuy: {
     exchange: string;
     price: number;
     volume: number;
+    symbol: string;
   };
   bestSell: {
     exchange: string;
     price: number;
     volume: number;
+    symbol: string;
   };
   priceDiff: number;
   profitPercent: number;
 }
 export function findBestArbitrageOpportunity(
   priceStore: Config<PriceDataFirst>,
-  thresholdPercent: number = 0.002
-): ArbitrageOpportunity | undefined {
+  thresholdPercent: number
+): ArbitrageOpportunity | null {
   const exchanges = Object.keys(priceStore);
   let bestBuyExchange = "";
   let bestSellExchange = "";
   let bestPriceDiff = 0;
   let bestPercentDiff = 0;
+  // const MIN_VOLUME = 3;
 
   for (let i = 0; i < exchanges.length; i++) {
     for (let j = 0; j < exchanges.length; j++) {
@@ -32,31 +37,27 @@ export function findBestArbitrageOpportunity(
       const sellEx = exchanges[j];
 
       const buyPrice = Number(
-        priceStore[buyEx as keyof Config<PriceDataFirst>]!.bestSell.price
+        priceStore[buyEx as keyof Config<PriceDataFirst>]!.bestSell?.price
       );
       const sellPrice = Number(
-        priceStore[sellEx as keyof Config<PriceDataFirst>]!.bestBuy.price
+        priceStore[sellEx as keyof Config<PriceDataFirst>]!.bestBuy?.price
       );
 
-      if (buyPrice == null || sellPrice == null) continue; // Пропускаем если нет данных
+      if (!buyPrice || !sellPrice) continue;
 
       const priceDiff = sellPrice - buyPrice;
-      const avgPrice = (sellPrice + buyPrice) / 2;
-      const percentDiff = (priceDiff / avgPrice) * 100;
+      const percentDiff = (priceDiff / buyPrice) * 100;
 
-      // Сохраняем только, если процент больше порога и лучше текущего максимума
-      if (percentDiff > thresholdPercent && percentDiff > bestPercentDiff) {
-        if (
-          priceStore[buyEx as keyof Config<PriceDataFirst>]!.bestSell.volume >
-            3 &&
-          priceStore[sellEx as keyof Config<PriceDataFirst>]!.bestBuy.volume >
-            3
-        ) {
-          bestBuyExchange = buyEx;
-          bestSellExchange = sellEx;
-          bestPriceDiff = priceDiff;
-          bestPercentDiff = percentDiff;
-        }
+      if (
+        percentDiff > thresholdPercent &&
+        percentDiff > bestPercentDiff &&
+        priceStore[buyEx as keyof Config<PriceDataFirst>]!.bestSell!.volume &&
+        priceStore[sellEx as keyof Config<PriceDataFirst>]!.bestBuy!.volume
+      ) {
+        bestBuyExchange = buyEx;
+        bestSellExchange = sellEx;
+        bestPriceDiff = priceDiff;
+        bestPercentDiff = percentDiff;
       }
     }
   }
@@ -71,6 +72,9 @@ export function findBestArbitrageOpportunity(
         volume:
           priceStore[bestBuyExchange as keyof Config<PriceDataFirst>]!.bestSell!
             .volume,
+        symbol:
+          priceStore[bestBuyExchange as keyof Config<PriceDataFirst>]!.bestSell!
+            .symbol,
       },
       bestSell: {
         exchange: bestSellExchange,
@@ -80,11 +84,14 @@ export function findBestArbitrageOpportunity(
         volume:
           priceStore[bestSellExchange as keyof Config<PriceDataFirst>]!.bestBuy!
             .volume,
+        symbol:
+          priceStore[bestSellExchange as keyof Config<PriceDataFirst>]!.bestBuy!
+            .symbol,
       },
       priceDiff: bestPriceDiff,
       profitPercent: bestPercentDiff,
     };
   }
 
-  return undefined;
+  return null; // явный null, если арбитраж не найден
 }

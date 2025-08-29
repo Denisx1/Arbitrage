@@ -4,11 +4,19 @@ export enum Pairs {
   BNBUSDT = "BNBUSDT",
   SOLUSDT = "SOLUSDT",
   LINKUSDT = "LINKUSDT",
-  ADAUSDT = "ADAUSDT",
+
   DOGEUSDT = "DOGEUSDT",
-  DOTUSDT = "DOTUSDT",
+
   XRPUSDT = "XRPUSDT",
   MX = "MXUSDT",
+  XLMUSDT = "XLMUSDT",
+
+  MATICUSDT = "MATICUSDT",
+  AVAXUSDT = "AVAXUSDT",
+
+  ADAUSDT = "ADAUSDT",
+
+  DOTUSDT = "DOTUSDT",
 }
 
 export enum Exchanges {

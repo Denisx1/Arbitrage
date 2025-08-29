@@ -54,5 +54,4 @@ export class HandleListenKey {
     if (!this.listenKey) throw new Error("ListenKey ещё не создан");
     return this.listenKey;
   }
-
 }

@@ -1,48 +1,55 @@
 import { createHmac } from "crypto";
-import { IExchangeAuth } from "./type";
+import {
+  ArgAuthType,
+  AuthByBitRequest,
+  IByBitResponce,
+  IExchangeAuth,
+} from "./type";
 import { WebSocketConector } from "../../socketConnector/WebSocketConector";
-import { OrderParams } from "./bybitPrivateClient";
+import { ByBitBalance } from "./balance";
 
-type ArgAuthType = string | number;
-type ArgType = ArgAuthType[] | OrderParams[];
-export interface AuthByBitRequest<T extends ArgType> {
-  op: string;
-  args: T;
-}
-
-export interface AuthByBitResponce {
-  retCode: number;
-  retMsg: string;
-  op: string;
-  connId: string;
-}
 export class ByBitAuth implements IExchangeAuth {
   private isAuthorized = false;
-  constructor(private wsManager: WebSocketConector) {}
+  private byBitBalance: number | null = null;
+  private bybitBalanceClient: ByBitBalance;
+  constructor(private wsManager: WebSocketConector) {
+    this.wsManager.addMessageHandler((msg: Buffer) => this.handleResponse(msg));
+    this.bybitBalanceClient = new ByBitBalance(this);
+  }
   private getExpires(): number {
     return Number((Date.now() + 1) * 1000);
   }
-
-  public login() {
-    this.wsManager.onMessage((data: Buffer) => {
-      const parsedData = JSON.parse(data.toString());
-      if (parsedData.op === "auth" && parsedData.retMsg === "OK") {
-
-        this.isAuthorized = true;
-        console.log("✅ Authenticated private WebSocket ByBit");
-      } else {
-        this.isAuthorized = false;
-        console.log("❌ Session Bybit not active");
-      }
-    });
-    this.wsManager.send(this.getAuthPayload());
+  public async handleResponse(msg: Buffer): Promise<void> {
+    const parsedData: IByBitResponce = JSON.parse(msg.toString());
+    if (parsedData.retMsg === "Invalid sign") {
+      console.log(
+        "❌ Session Bybit not active Relogin......",
+        parsedData.retMsg
+      );
+      this.login();
+      return;
+    }
+    if (parsedData.op !== "auth" || parsedData.retMsg !== "OK") {
+      return;
+    }
+    this.isAuthorized = true;
+    console.log("✅ Authenticated private WebSocket ByBit");
+    if (this.isAuthorized) {
+      await this.bybitBalanceClient.getbalance();
+      return;
+    }
+    return;
+  }
+  public login(): void {
+    this.wsManager.send<AuthByBitRequest<ArgAuthType[]>>(this.getAuthPayload());
+    return;
   }
   private getSignature(): string {
     return createHmac("sha256", process.env.BYBIT_API_SECRET!)
       .update(`GET/realtime${this.getExpires()}`)
       .digest("hex");
   }
-  public getAuthPayload(): AuthByBitRequest<ArgAuthType[]> {
+  private getAuthPayload(): AuthByBitRequest<ArgAuthType[]> {
     const expires = this.getExpires();
     const signature = this.getSignature();
     return {
@@ -50,7 +57,16 @@ export class ByBitAuth implements IExchangeAuth {
       args: [process.env.BYBIT_API_KEY!, expires, signature],
     };
   }
-  public get status(): boolean {
+  get status(): boolean {
     return this.isAuthorized;
+  }
+  get ws(): WebSocketConector {
+    return this.wsManager;
+  }
+  get balance(): number {
+    return this.byBitBalance!;
+  }
+  set balance(value: number) {
+    this.byBitBalance = value;
   }
 }

@@ -1,32 +1,35 @@
 import { createHmac } from "crypto";
 import { IExchangeAuth } from "../bybit/type";
 import { WebSocketConector } from "../../socketConnector/WebSocketConector";
+import { AuthOkxRequest } from "./types";
+import { OkxBalanceClient } from "./balance";
 
-interface AuthOkxRequest {
-  op: string;
-  args: {
-    apiKey: string;
-    passphrase: string;
-    timestamp: string;
-    sign: string;
-  }[];
-}
 export class AuthOkx implements IExchangeAuth {
   private isAuthorized = false;
-  constructor(private wsManager: WebSocketConector) {}
-
+  private method = "GET";
+  private requestPath = "/users/self/verify";
+  private body = "";
+  private balanceClient: OkxBalanceClient;
+  private okxBalance: number = 0;
+  constructor(private wsManager: WebSocketConector) {
+    this.wsManager.addMessageHandler((data: Buffer) =>
+      this.handleResponse(data)
+    );
+    this.balanceClient = new OkxBalanceClient(this);
+  }
+  public handleResponse(msg: Buffer): void {
+    const parsedData = JSON.parse(msg.toString());
+    if (parsedData.event !== "login" && parsedData.code !== "0") {
+      this.isAuthorized = false;
+      return;
+    }
+    this.isAuthorized = true;
+    console.log("✅ Authenticated private WebSocket Okx");
+    if (this.isAuthorized) {
+      this.balanceClient.getBalance();
+    }
+  }
   public login() {
-    this.wsManager.onMessage((data: Buffer) => {
-      const parsedData = JSON.parse(data.toString());
-
-      if (parsedData.event === "login" && parsedData.code === "0") {
-        this.isAuthorized = true;
-        console.log("✅ Authenticated private WebSocket Okx");
-      } else {
-        this.isAuthorized = false;
-        console.log("❌ Session Okx not active");
-      }
-    });
     this.wsManager.send(this.getAuthPayload());
   }
   private getAuthPayload(): AuthOkxRequest {
@@ -44,10 +47,7 @@ export class AuthOkx implements IExchangeAuth {
     };
   }
   private getSignature(timeStamp: string): string {
-    const method = "GET";
-    const requestPath = "/users/self/verify";
-    const body = ""; // пусто для GET
-    const strToSign = timeStamp + method + requestPath + body;
+    const strToSign = timeStamp + this.method + this.requestPath + this.body;
 
     return createHmac("sha256", process.env.OKX_API_SECRET!)
       .update(strToSign)
@@ -59,5 +59,14 @@ export class AuthOkx implements IExchangeAuth {
   }
   public get status(): boolean {
     return this.isAuthorized;
+  }
+  get ws(): WebSocketConector {
+    return this.wsManager; // <-- добавляем доступ к WS
+  }
+  get balance(): number {
+    return this.okxBalance!;
+  }
+  set balance(balance: number) {
+    this.okxBalance = balance;
   }
 }

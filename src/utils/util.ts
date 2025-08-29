@@ -1,25 +1,17 @@
 export interface PriceDataFirst {
-  bestSell: { price: number; volume: number };
-  bestBuy: { price: number; volume: number };
+  bestSell: { price: number; volume: number; symbol: string };
+  bestBuy: { price: number; volume: number; symbol: string };
 }
-// export function getBestPrices(asks: string[][], bids: string[][]): PriceData {
-//   const bestBid = bids!.length > 0 ? parseFloat(bids[0][0]) : null;
-//   const bestAsk = asks!.length > 0 ? parseFloat(asks[0][0]) : null;
-
-//   return {
-//     bestAskPrice: bestAsk!,
-//     bestBidPrice: bestBid!,
-//   };
-// }
 
 export function getBestBidAsk(
   asks: string[][],
-  bids: string[][]
+  bids: string[][],
+  symbol: string
 ): PriceDataFirst {
   if (!bids.length || !asks.length)
     return {
-      bestSell: { price: 0, volume: 0 },
-      bestBuy: { price: 0, volume: 0 },
+      bestSell: { price: 0, volume: 0, symbol: "" },
+      bestBuy: { price: 0, volume: 0, symbol: "" },
     };
 
   const [bestAskPrice, bestAskVolume] = asks.reduce((best, current) =>
@@ -32,7 +24,15 @@ export function getBestBidAsk(
   );
 
   return {
-    bestSell: { price: parseFloat(bestAskPrice), volume: parseFloat(bestAskVolume) },
-    bestBuy: { price: parseFloat(bestBidPrice), volume: parseFloat(bestBidVolume) },
+    bestSell: {
+      price: parseFloat(bestAskPrice),
+      volume: parseFloat(bestAskVolume),
+      symbol,
+    },
+    bestBuy: {
+      price: parseFloat(bestBidPrice),
+      volume: parseFloat(bestBidVolume),
+      symbol,
+    },
   };
 }

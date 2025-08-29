@@ -17,6 +17,7 @@
     "@stablelib/hex": "^2.0.1",
     "base64-js": "^1.5.1",
     "binance-api-node": "^0.12.9",
+    "bybit-api": "^4.2.7",
     "crypto": "^1.0.1",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^17.2.1",

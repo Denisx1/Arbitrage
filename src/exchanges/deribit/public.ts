@@ -5,15 +5,24 @@ import { updatePriceStore } from "../../utils/priceStore";
 import { getBestBidAsk } from "../../utils/util";
 
 export class DeribitPublicWs implements IExchangePublicClient {
-  constructor(private wsManager: WebSocketConector) {}
+  constructor(private wsManager: WebSocketConector, private symbol: string) {
+    this.wsManager.addMessageHandler((msg) => this.handlePublicMessage(msg));
+  }
+
   subscribeOrderBook(): void {
-    this.wsManager.onMessage((msg: Buffer) => this.handlePublicMessage(msg));
+    this.symbol = this.symbol.replace("USDT", "_USDC-PERPETUAL");
+    this.wsManager.connectWebSocket({
+      method: "/public/subscribe",
+      params: {
+        channels: [`book.${this.symbol}.100ms`],
+      },
+    });
   }
   private handlePublicMessage(msg: Buffer): void {
     const data = JSON.parse(msg.toString());
-
+ 
     if (!data.params) return;
-    const { bids, asks } = data.params.data
+    const { bids, asks, instrument_name } = data.params.data;
     const asksPrices = asks.map(([_, price, amount]: any) => [
       parseFloat(price),
       parseFloat(amount),
@@ -22,11 +31,12 @@ export class DeribitPublicWs implements IExchangePublicClient {
       parseFloat(price),
       parseFloat(amount),
     ]);
-    if(!asksPrices.length || !bidsPrices.length) return;
- 
+    if (!asksPrices.length || !bidsPrices.length) return;
+
     const { bestBuy, bestSell } = getBestBidAsk(
       asksPrices,
-      bidsPrices
+      bidsPrices,
+      instrument_name
     );
 
     updatePriceStore(Exchanges.DERIBIT, bestBuy!, bestSell!);

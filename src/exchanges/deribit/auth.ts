@@ -1,35 +1,31 @@
-
 import { IExchangeAuth } from "../bybit/type";
 import { WebSocketConector } from "../../socketConnector/WebSocketConector";
 import { createHmac } from "crypto";
-export interface AuthDeribitRequest {
-  jsonrpc: string;
-  id: number;
-  method: string;
-  params: {
-    grant_type: string;
-    client_id: string;
-    timestamp: number;
-    signature: string;
-    nonce: string;
-    data: string;
-  };
-}
+import { AuthDeribitRequest } from "./type";
+import { DeribitBalanceClient } from "./balance";
+
 export class AuthDeribitWs implements IExchangeAuth {
   private isAuthenticated: boolean = false;
-  constructor(private wsManager: WebSocketConector) {}
-
+  private deribitBalanceClient: DeribitBalanceClient;
+  private deribitBalance: number | null = null;
+  constructor(private wsManager: WebSocketConector) {
+    this.wsManager.addMessageHandler((msg) => this.handlePublicMessage(msg));
+    this.deribitBalanceClient = new DeribitBalanceClient(this);
+  }
+  public handlePublicMessage(msg: Buffer): void {
+    const parsedData = JSON.parse(msg.toString());
+    if (
+      !parsedData?.result?.access_token ||
+      !parsedData?.result?.refresh_token
+    ) {
+      return;
+    }
+    this.isAuthenticated = true;
+    console.log("✅ Authenticated private WebSocket Deribit");
+    this.deribitBalanceClient.getBalance();
+    return;
+  }
   public login(): void {
-    this.wsManager.onMessage((msg: Buffer) => {
-      const parsedData = JSON.parse(msg.toString());
-      if (parsedData.result.access_token && parsedData.result.refresh_token) {
-        this.isAuthenticated = true;
-        console.log("✅ Authenticated private WebSocket Deribit");
-      } else {
-        this.isAuthenticated = false;
-        console.log("❌ Session Deribit not active");
-      }
-    });
     this.wsManager.send<AuthDeribitRequest>(this.getAuthPayload());
   }
   private getSignature(data: string): string {
@@ -60,5 +56,14 @@ export class AuthDeribitWs implements IExchangeAuth {
   }
   public get status(): boolean {
     return this.isAuthenticated;
+  }
+  get ws(): WebSocketConector {
+    return this.wsManager; // <-- добавляем доступ к WS
+  }
+  get balance(): number {
+    return this.deribitBalance!;
+  }
+  set balance(value: number) {
+    this.deribitBalance = value;
   }
 }

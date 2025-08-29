@@ -43,6 +43,11 @@ export function getPrivateClients(): ExchangesReturn<IExchangeAuth> {
   return privateClientsCache;
 }
 
+export function getPublicClients(): ExchangesReturn<IExchangePublicClient> {
+  if (!publicClientsCache) throw new Error("Public clients not initialized");
+  return publicClientsCache;
+}
+
 export function initPublicClients(
   symbol: string
 ): ExchangesReturn<IExchangePublicClient> {

@@ -54,3 +54,42 @@ export interface AuthRequest {
     timestamp: number;
   };
 }
+
+export interface BinanceOrderParams {
+  id: string;
+  method: string;
+  params: {
+    symbol: string;
+    side: string;
+    type: string;
+    price: string;
+    quantity: string;
+    timeInForce: string;
+    timestamp?: number;
+    recvWindow?: number;
+  };
+}
+export interface IBinanceBalance {
+  accountAlias: string;
+  asset: string;
+  balance: string;
+  crossWalletBalance: string;
+  crossUnPnl: string;
+  availableBalance: string;
+  maxWithdrawAmount: string;
+  marginAvailable: boolean;
+  updateTime: number;
+}
+export interface LoginParams {
+  apiKey: string;
+  timestamp: number;
+}
+export interface OrderParams {
+  apiKey: string;
+  symbol: string;
+  side: string;
+  type: string;
+  quantity: string;
+  price: string;
+  timeInForce: string;
+}

@@ -1,67 +1,79 @@
+import { IExchangePrivateClient } from "../../types";
+import { ArbitrageOpportunity } from "../../arbitrage/service";
 import { IExchangeAuth } from "../bybit/type";
-import { WebSocketConector } from "../../socketConnector/WebSocketConector";
-import { createHmac } from "crypto";
+import { Direction } from "../binance/private/privateClient";
 import zlib from "zlib";
-interface HTXAuthParams {
-  AccessKeyId: string;
-  SignatureMethod: string;
-  SignatureVersion: string;
-  Timestamp: string;
-  Signature?: string;
+interface HTXOrderParams {
+  op: string;
+  cid: string;
+  data: {
+    contract_code: string; // Символ, например "DOGE-USDT"
+    margin_mode: "cross" | "isolated";
+    position_side?: "long" | "short"; // Обязательно в Hedge режиме
+    side: "buy" | "sell";
+    type: "limit" | "market" | "post_only";
+    price?: string; // Обязательно для лимитного ордера
+    volume: string; // Кол-во контрактов (целое число)
+    time_in_force?: "GTC" | "FOK" | "IOC";
+    client_order_id?: string;
+  };
 }
-export class HTXAuth implements IExchangeAuth {
-  private isAuthenticated: boolean = false;
-  constructor(private readonly wsManager: WebSocketConector) {}
-  public login(): void {
-    this.wsManager.send<HTXAuthParams>(this.getAuthPayload());
-    this.wsManager.onMessage((msg: Buffer) => {
-      const buf = Buffer.from(msg);
-      const decodedMsg = zlib.gunzipSync(buf).toString("utf-8");
-      const parsedData = JSON.parse(decodedMsg);
-      if (parsedData.op === "ping") {
-        this.wsManager.send({ op: "pong" });
-        return;
-      }
-      if (parsedData.op === "auth" && parsedData["err-code"] === 0) {
-        this.isAuthenticated = true;
-        console.log("✅ Authenticated private WebSocket HTX");
-      } else {
-        this.isAuthenticated = false;
-        console.log("❌ Session HTX not active");
-      }
-    });
+
+export class HTXPrivateWsClient implements IExchangePrivateClient {
+  constructor(private auth: IExchangeAuth) {
+    this.auth.ws?.addMessageHandler((msg) => this.handleOrderResponse(msg));
+  }
+  public async placeOrder(
+    order: Partial<ArbitrageOpportunity>,
+    direction: Direction
+  ) {
+    let newOrder: HTXOrderParams;
+    if (direction === Direction.BUY) {
+      newOrder = {
+        op: "place_order",
+        cid: "newOrder",
+        data: {
+          contract_code: order.bestBuy?.symbol!,
+          margin_mode: "cross",
+          position_side: "long",
+          side: "buy",
+          type: "limit",
+          price: order.bestBuy?.price.toString()!,
+          volume: (this.auth.balance! / order.bestBuy?.price!).toString(),
+        },
+      };
+    } else if (direction === Direction.SELL) {
+      newOrder = {
+        op: "place_order",
+        cid: "newOrder",
+        data: {
+          contract_code: order.bestSell?.symbol!,
+          margin_mode: "cross",
+          position_side: "long",
+          side: "buy",
+          type: "limit",
+          price: order.bestSell?.price.toString()!,
+          volume: (this.auth.balance! / order.bestSell?.price!).toString(),
+        },
+      };
+    }
+    this.createOrder(newOrder!);
+  }
+  private createOrder(order: HTXOrderParams) {
+    if (this.auth.status) {
+      this.auth.ws!.send<HTXOrderParams>(order);
+    }
   }
 
-  private getSignature(params: HTXAuthParams): string {
-    const host = "api.hbdm.com";
-    const path = "/linear-swap-notification";
-    const method = "GET";
+  private handleOrderResponse(msg: Buffer) {
+    const buf = Buffer.from(msg);
+    const decodedMsg = zlib.gunzipSync(buf).toString("utf-8");
+    const parsedData = JSON.parse(decodedMsg);
+    if (parsedData.cid === "newOrder" && parsedData.data === null) {
+      console.log("parsedData", parsedData.message);
+      return;
+    }
 
-    const sortedParams = Object.entries(params)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-      .join("&");
-
-    const payload = `${method}\n${host}\n${path}\n${sortedParams}`;
-    return createHmac("sha256", process.env.HTX_API_SECRET!)
-      .update(payload)
-      .digest("base64");
-  }
-
-  private getAuthPayload(): HTXAuthParams & { op: string; type: string } {
-    const timestamp = new Date().toISOString().replace(/\.\d+Z$/, "");
-    const params: HTXAuthParams = {
-      AccessKeyId: process.env.HTX_API_KEY!,
-      SignatureMethod: "HmacSHA256",
-      SignatureVersion: "2",
-      Timestamp: timestamp,
-    };
-    const signature = this.getSignature(params);
-
-    return { ...params, Signature: signature, op: "auth", type: "api" };
-  }
-
-  public get status(): boolean {
-    return this.isAuthenticated;
+    return;
   }
 }

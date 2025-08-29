@@ -1,67 +1,88 @@
-import WebSocket from "ws";
-import { ExchangeConfig } from "../../config/types";
-import { ByBitAuth, AuthByBitRequest } from "./bybitAuth";
-import { IExchangePrivateClient } from "./type";
-import { WebSocketConector } from "../../socketConnector/WebSocketConector";
-export interface OrderParams {
-  category: string;
-  symbol: string;
-  side: string;
-  orderType: string;
-  qty: string;
-  price: string;
-  timeInForce: string;
-}
-export class BybitPrivateWsClient {
-  private isAuthenticated: boolean = false;
-  private wsPrivate: WebSocket | null = null;
-  constructor(private wsManager: WebSocketConector, private auth: ByBitAuth) {}
+import { IExchangePrivateClient } from "../../types";
+import { ArbitrageOpportunity } from "../../arbitrage/service";
+import { IExchangeAuth, IOrderParams } from "./type";
+import { Direction } from "../binance/private/privateClient";
 
-  public connectPrivate() {
-    if (!this.auth.status) {
-      console.log("❌ Session not active, cannot place order");
+export class BybitPrivateWsClient implements IExchangePrivateClient {
+  constructor(private auth: IExchangeAuth) {
+    this.auth.ws?.addMessageHandler((msg: Buffer) =>
+      this.handleOrderResponse(msg)
+    );
+  }
+
+  public placeOrder(
+    order: Partial<ArbitrageOpportunity>,
+    direction: Direction
+  ) {
+    const timestamp = Date.now().toString();
+    let newOrder: IOrderParams;
+    if (direction === Direction.BUY) {
+      newOrder = {
+        reqId: "byBitOrderBuy",
+        header: {
+          XBAPI_TIMESTAMP: timestamp,
+          XBAPI_RECV_WINDOW: "5000",
+          Referer: "1",
+        },
+        op: "order.create",
+        args: [
+          {
+            symbol: order.bestBuy?.symbol!,
+            side: Direction.BUY,
+            orderType: "LIMIT",
+            qty: (this.auth.balance! / order.bestBuy?.price!).toString(),
+            price: order.bestBuy?.price.toString()!,
+            category: "LIMIT",
+            timeInForce: "GTC",
+          },
+        ],
+      };
+    } else if (direction === Direction.SELL) {
+      newOrder = {
+        reqId: "byBitOrderSell",
+        header: {
+          XBAPI_TIMESTAMP: timestamp,
+          XBAPI_RECV_WINDOW: "5000",
+          Referer: "1",
+        },
+        op: "order.create",
+        args: [
+          {
+            symbol: order.bestSell?.symbol!,
+            side: Direction.SELL,
+            orderType: "LIMIT",
+            qty: (this.auth.balance! / order.bestSell?.price!).toString(),
+            price: order.bestSell?.price.toString()!,
+            category: "LIMIT",
+            timeInForce: "GTC",
+          },
+        ],
+      };
+    }
+
+    this.createOrder(newOrder!);
+
+    return;
+  }
+
+  private createOrder(order: IOrderParams) {
+    if (this.auth.status && this.auth.balance! > 0) {
+      this.auth.ws?.send<IOrderParams>(order);
+    }
+  }
+  private handleOrderResponse(msg: Buffer) {
+    const parsedData = JSON.parse(msg.toString());
+
+    if (
+      parsedData.reqId !== "byBitOrderBuy" &&
+      parsedData.reqId !== "byBitOrderSell"
+    ) {
       return;
     }
-    this.wsManager.send<AuthByBitRequest<OrderParams[]>>(this.placeOrder());
-  }
-  public placeOrder() // price: number, // symbol: string,
-  // qty: number,
-  // side: string
-  {
-    return {
-      op: "spread.order",
-      args: [
-        {
-          category: "linear",
-          symbol: "BTCUSDT",
-          side: "Buy",
-          orderType: "Limit",
-          qty: "0.001",
-          price: "20000",
-          timeInForce: "GoodTillCancel",
-        },
-      ],
-    };
-    // if (
-    //   !this.isAuthenticated ||
-    //   this.wsManager.ws?.readyState !== WebSocket.OPEN
-    // ) {
-    //   throw new Error("WebSocket not connected or authenticated");
-    // }
-    // const orderPayload: AuthByBitRequest<OrderParams[]> = {
-    //   op: "spread.order",
-    //   args: [
-    //     {
-    //       category: "linear",
-    //       symbol: symbol,
-    //       side,
-    //       orderType: "Limit",
-    //       qty: qty.toString(),
-    //       price: price.toString(),
-    //       timeInForce: "GoodTillCancel",
-    //     },
-    //   ],
-    // };
-    // return orderPayload;
+    if (parsedData.retCode === 10404) {
+      console.log(`недостаточно средств для выставление ордера`);
+      return;
+    }
+    console.log("✅ Ордер выполнен", parsedData.result);
   }
 }

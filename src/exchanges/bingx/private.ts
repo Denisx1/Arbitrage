@@ -1,63 +1,131 @@
 import { WebSocketConector } from "../../socketConnector/WebSocketConector";
-import { HandleListenKey } from "./handleListenKey";
-import zlib from "zlib";
+import { IExchangePrivateClient } from "../../types";
+import { ArbitrageOpportunity } from "../../arbitrage/service";
+import { IExchangeAuth } from "../bybit/type";
+import { Direction } from "../binance/private/privateClient";
+import { createHmac } from "crypto";
 
-interface BingXAuthParams {}
-export class BingXAuth {
-  private wsManager: WebSocketConector | null = null;
-  private listenKey: string | null = null;
-  private isAuthenticated: boolean = false;
-  private keepAliveInterval: NodeJS.Timer | null = null;
-  constructor(private readonly handleListenKey: HandleListenKey) {}
+interface OrderParams {
+  symbol: string;
+  side: string;
+  positionSide: string;
+  type: string;
+  quantity: string;
+  price: string;
+  takeProfit?: string;
+  stopLoss?: string;
+}
 
-  public async login(): Promise<void> {
-    this.listenKey = await this.handleListenKey.createListenKey();
-    await this.initWebSocket();
-    this.keepAliveInterval = setInterval(
-      () => this.keepAliveListenKey(),
-      30 * 60 * 1000
-    );
-  }
+export class BingXPrivateClient implements IExchangePrivateClient {
+  private HOST = "open-api.bingx.com";
+  private URI = "/openApi/swap/v2/trade/order";
+  private method = "POST";
 
-  private async initWebSocket(): Promise<void> {
-    if (!this.listenKey) throw new Error("ListenKey не создан");
+  constructor(private auth: IExchangeAuth) {}
 
-    const url = `wss://open-api-swap.bingx.com/swap-market?listenKey=${this.listenKey}`;
-    this.wsManager = new WebSocketConector(url);
-    await this.wsManager.connectWebSocket();
-
-    this.wsManager.onMessage((data: Buffer) => this.handleMessage(data));
-  }
-
-  private handleMessage(data: Buffer): void {
-    const buf = Buffer.from(data);
-    const decodedMsg = zlib.gunzipSync(buf).toString("utf-8");
-
-    if (decodedMsg === "Ping") {
-      this.wsManager?.send("Pong");
-      return;
+  public async placeOrder(
+    order: Partial<ArbitrageOpportunity>,
+    direction: Direction
+  ) {
+    if (!order.bestBuy && !order.bestSell) {
+      throw new Error("Нет данных для ордера");
     }
 
-    const parsed = JSON.parse(decodedMsg);
-    // Успешная аутентификация
-    if (!this.isAuthenticated && parsed.e === "SNAPSHOT") {
-      this.isAuthenticated = true;
-      console.log("✅ Authenticated private WebSocket BingX");
-    }
-  }
+    const price =
+      direction === Direction.BUY
+        ? order.bestBuy!.price!
+        : order.bestSell!.price!;
 
-  private async keepAliveListenKey(): Promise<void> {
-    if (!this.listenKey) return;
+    const quantity = Number((this.auth.balance! / price).toFixed(4)).toString();
+
+    // формируем payload (как в примере)
+    const payload: OrderParams = {
+      symbol:
+        direction === Direction.BUY
+          ? order.bestBuy!.symbol!
+          : order.bestSell!.symbol!,
+      side: direction === Direction.BUY ? "BUY" : "SELL",
+      positionSide: direction === Direction.BUY ? "LONG" : "SHORT",
+      type: "LIMIT",
+      quantity: quantity,
+      price: price.toString(),
+    };
+
+    if (price) {
+      payload.takeProfit = JSON.stringify({
+        type: "TAKE_PROFIT_MARKET",
+        stopPrice: Number((price * 1.01).toFixed(4)),
+        price: Number((price * 1.01).toFixed(4)),
+        workingType: "MARK_PRICE",
+      });
+
+      payload.stopLoss = JSON.stringify({
+        type: "STOP_MARKET",
+        stopPrice: Number((price * 0.99).toFixed(4)),
+        workingType: "MARK_PRICE",
+      });
+    }
+
+    const timestamp = Date.now();
+
+    // Формируем строку параметров (⚠️ без сортировки!)
+    const paramsString = this.getParameters(payload, timestamp, false);
+    const paramsEncoded = this.getParameters(payload, timestamp, true);
+
+    // Подпись
+    const signature = createHmac("sha256", process.env.BINGX_API_SECRET!)
+      .update(paramsString)
+      .digest("hex");
+
+    const url = `https://${this.HOST}${this.URI}?${paramsEncoded}&signature=${signature}`;
 
     try {
-      this.listenKey = await this.handleListenKey.keepAliveListnKey();
-      console.log("ListenKey продлён:", this.listenKey);
+      const resp = await fetch(url, {
+        method: this.method,
+        headers: {
+          "X-BX-APIKEY": process.env.BINGX_API_KEY!,
+        },
+      });
+
+      // Дополнительно парсим BigInt корректно
+      let data;
+      try {
+        data = await resp.json();
+      } catch (e) {
+        console.error("JSON parse error:", e);
+        throw new Error(`Failed to parse response: ${resp}`);
+      }
+      if (!data.data) {
+        console.log("Order Bingx response:", {
+          message: data.message,
+          code: data.code,
+        });
+        return;
+      }
+      return data;
     } catch (err) {
-      console.error("Ошибка продления listenKey:", err);
-      // Можно попробовать заново создать ключ и переподключить WebSocket
+      throw err;
     }
   }
-  public get status(): boolean {
-    return this.isAuthenticated;
+
+  private getParameters(
+    payload: OrderParams,
+    timestamp: number,
+    urlEncode = false
+  ): string {
+    let parameters = "";
+    for (const key in payload) {
+      if (urlEncode) {
+        parameters +=
+          key +
+          "=" +
+          encodeURIComponent(payload[key as keyof OrderParams] as string) +
+          "&";
+      } else {
+        parameters += key + "=" + payload[key as keyof OrderParams] + "&";
+      }
+    }
+    parameters += "timestamp=" + timestamp;
+    return parameters;
   }
 }

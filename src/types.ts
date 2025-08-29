@@ -1,9 +1,9 @@
+import { ArbitrageOpportunity } from "./arbitrage/service";
 import { ExchangeConfig } from "./config/types";
+import { Direction } from "./exchanges/binance/private/privateClient";
 import { Exchanges } from "./pairsEnum";
-export interface ExchngeClient {
-  connectPublic: () => void;
-  connectPrivate?: () => void;
-  placeOrderBybit?: (price: number, qty: number, side: string) => Promise<void>;
+export interface IExchangePrivateClient {
+  placeOrder(opportunity: ArbitrageOpportunity, direction: Direction): void;
 }
 
 export const ExchangesConfig: Record<Exchanges, ExchangeConfig> = {
